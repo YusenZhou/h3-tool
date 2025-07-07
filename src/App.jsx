@@ -1,57 +1,116 @@
-import { useState } from 'react'
-import { latLngToCell, cellToLatLng } from 'h3-js'
+import { useState, useRef } from 'react'
+import { latLngToCell, cellToLatLng, cellToBoundary, isValidCell } from 'h3-js'
+import { MapContainer, TileLayer, ZoomControl, Polygon } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import './leaflet-icons.js'
 import './App.css'
 
 function App() {
   const [coordinates, setCoordinates] = useState('')
   const [resolution, setResolution] = useState('7')
   const [h3Id, setH3Id] = useState('')
+  const [hexId, setHexId] = useState('')
   const [centerCoords, setCenterCoords] = useState(null)
   const [error, setError] = useState('')
+  const [h3Polygons, setH3Polygons] = useState([])
+  const mapRef = useRef(null)
 
   const handleConvert = () => {
-    handleClear()
     try {
       setError('')
       
-      const coords = coordinates.split(',').map(coord => coord.trim())
-      if (coords.length !== 2) {
-        setError('Please enter coordinates in format: latitude, longitude')
+      if (coordinates.trim()) {
+        const coords = coordinates.split(',').map(coord => coord.trim())
+        if (coords.length !== 2) {
+          setError('Please enter coordinates in format: latitude, longitude')
+          return
+        }
+        
+        const lat = parseFloat(coords[0])
+        const lng = parseFloat(coords[1])
+        const res = parseInt(resolution)
+        
+        if (isNaN(lat) || isNaN(lng) || isNaN(res)) {
+          setError('Please enter valid numbers for latitude, longitude, and resolution')
+          return
+        }
+        
+        if (lat < -90 || lat > 90) {
+          setError('Latitude must be between -90 and 90 degrees')
+          return
+        }
+        
+        if (lng < -180 || lng > 180) {
+          setError('Longitude must be between -180 and 180 degrees')
+          return
+        }
+        
+        if (res < 0 || res > 15) {
+          setError('Resolution must be between 0 and 15')
+          return
+        }
+        
+        const h3Index = latLngToCell(lat, lng, res)
+        setH3Id(h3Index)
+        setHexId(h3Index)
+        
+        const [centerLat, centerLng] = cellToLatLng(h3Index)
+        setCenterCoords({ lat: centerLat, lng: centerLng })
+      } else if (hexId.trim()) {
+        if (!isValidCell(hexId)) {
+          setError('Please enter a valid H3 hex ID')
+          return
+        }
+        
+        setH3Id(hexId)
+        
+        const [centerLat, centerLng] = cellToLatLng(hexId)
+        setCenterCoords({ lat: centerLat, lng: centerLng })
+        
+        const res = hexId.length - 1
+        setResolution(res.toString())
+      }
+      else {
+        setError('Please enter either coordinates or H3 hex ID')
         return
       }
-      
-      const lat = parseFloat(coords[0])
-      const lng = parseFloat(coords[1])
-      const res = parseInt(resolution)
-      
-      if (isNaN(lat) || isNaN(lng) || isNaN(res)) {
-        setError('Please enter valid numbers for latitude, longitude, and resolution')
-        return
-      }
-      
-      if (lat < -90 || lat > 90) {
-        setError('Latitude must be between -90 and 90 degrees')
-        return
-      }
-      
-      if (lng < -180 || lng > 180) {
-        setError('Longitude must be between -180 and 180 degrees')
-        return
-      }
-      
-      if (res < 0 || res > 15) {
-        setError('Resolution must be between 0 and 15')
-        return
-      }
-      
-      const h3Index = latLngToCell(lat, lng, res)
-      setH3Id(h3Index)
-      
-      const [centerLat, centerLng] = cellToLatLng(h3Index)
-      setCenterCoords({ lat: centerLat, lng: centerLng })
       
     } catch (err) {
-      setError('Error converting coordinates: ' + err.message)
+      setError('Error processing input: ' + err.message)
+    }
+  }
+
+  const handleDrawH3 = () => {
+    if (!h3Id) {
+      setError('Please convert coordinates to H3 first')
+      return
+    }
+    
+    try {
+      setError('')
+      const boundary = cellToBoundary(h3Id, false)
+      setH3Polygons(prev => [...prev, { id: h3Id, boundary }])
+    } catch (err) {
+      setError('Error drawing H3 hexagon: ' + err.message)
+    }
+  }
+
+  const handleLocateOnMap = () => {
+    if (!h3Id || !mapRef.current) {
+      setError('Please convert coordinates to H3 first')
+      return
+    }
+    
+    try {
+      setError('')
+      const map = mapRef.current
+      const res = parseInt(resolution)
+      const zoomLevel = Math.min(15, Math.max(2, 20 - res))
+      map.setView([centerCoords.lat, centerCoords.lng], zoomLevel)
+      const boundary = cellToBoundary(h3Id, false)
+      setH3Polygons(prev => [...prev, { id: h3Id, boundary }])
+    } catch (err) {
+      setError('Error locating on map: ' + err.message)
     }
   }
 
@@ -59,75 +118,166 @@ function App() {
     setCoordinates('')
     setResolution('7')
     setH3Id('')
+    setHexId('')
     setCenterCoords(null)
+    setH3Polygons([])
     setError('')
   }
 
   return (
     <div className="app-container">
-      <h1>H3 Coordinate Converter</h1>
-      <p className="description">
-        Convert latitude, longitude, and resolution level to Uber H3 ID
-      </p>
-      
-      <div className="input-section">
-        <div className="input-group">
-          <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
-          <input
-            id="coordinates"
-            type="text"
-            placeholder="e.g., 37.7749, -122.4194"
-            value={coordinates}
-            onChange={(e) => setCoordinates(e.target.value)}
+      <div className="map-background">
+        <MapContainer
+          ref={mapRef}
+          center={[0, 0]}
+          zoom={2}
+          minZoom={2}
+          maxZoom={15}
+          style={{ height: '100vh', width: '100vw' }}
+          zoomControl={false}
+          maxBounds={[[-90, -Infinity], [90, Infinity]]}
+          maxBoundsViscosity={1.0}
+        >
+          <ZoomControl position="bottomright" />
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-        </div>
-        
-        <div className="input-group">
-          <label htmlFor="resolution">Resolution Level (0-15):</label>
-          <input
-            id="resolution"
-            type="number"
-            min="0"
-            max="15"
-            placeholder="e.g., 9"
-            value={resolution}
-            onChange={(e) => setResolution(e.target.value)}
-          />
-        </div>
-        
-        <div className="button-group">
-          <button onClick={handleConvert} className="convert-btn">
-            Convert to H3
-          </button>
-          <button onClick={handleClear} className="clear-btn">
-            Clear
-          </button>
-        </div>
+          {h3Polygons.map((polygon, index) => (
+            <Polygon
+              key={`${polygon.id}-${index}`}
+              positions={polygon.boundary}
+              pathOptions={{
+                color: '#ff4444',
+                weight: 2,
+                fillColor: '#ff4444',
+                fillOpacity: 0.2
+              }}
+            />
+          ))}
+        </MapContainer>
       </div>
-      
-      {error && (
-        <div className="error-message">
-          {error}
+
+      <div className="floating-form">
+        <h1>H3 Tool</h1>
+        <p className="description">
+          Get Uber H3 Hexagon info from coordinates or H3 hex ID
+        </p>
+        
+        <div className="input-section">
+          <div className="input-group">
+            <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
+            <input
+              id="coordinates"
+              type="text"
+              placeholder="e.g., 37.7749, -122.4194"
+              value={coordinates}
+              onChange={(e) => setCoordinates(e.target.value)}
+            />
+          </div>
+          
+          <div className="input-group">
+            <label htmlFor="resolution">Resolution Level (0-15):</label>
+            <input
+              id="resolution"
+              type="number"
+              min="0"
+              max="15"
+              placeholder="e.g., 9"
+              value={resolution}
+              onChange={(e) => setResolution(e.target.value)}
+            />
+          </div>
+            <div className="input-section-divider">
+            <span>OR</span>
+          </div>
+          <div className="input-group">
+            <label htmlFor="hexId">H3 Hex ID:</label>
+            <input
+              id="hexId"
+              type="text"
+              placeholder="e.g., 8928308280fffff"
+              value={hexId}
+              onChange={(e) => setHexId(e.target.value)}
+            />
+          </div>
+          
+          <div className="button-group">
+            <button onClick={handleConvert} className="convert-btn">
+              Get H3 info
+            </button>
+            <button onClick={handleClear} className="clear-btn">
+              Clear
+            </button>
+          </div>
         </div>
-      )}
-      
-      {h3Id && (
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+        
         <div className="result-section">
-          <h3>H3 Result</h3>
+          <h3>H3 Info</h3>
           <div className="center-coords">
             <h4>ID</h4>
             <div className="coords-display">
-              {h3Id}
+              {h3Id || 'null'}
             </div>
           </div>
           <div className="center-coords">
             <h4>Center Coordinates (Lat, Lng)</h4>
             <div className="coords-display">
-              {centerCoords.lat.toFixed(6)},{centerCoords.lng.toFixed(6)}
+              {centerCoords ? `${centerCoords.lat.toFixed(6)},${centerCoords.lng.toFixed(6)}` : 'null'}
             </div>
           </div>
+          <div className="button-group">
+            <button 
+              onClick={handleDrawH3} 
+              className="draw-btn"
+              type="button"
+              disabled={!h3Id}
+            >
+              Draw H3 Hexagon on Map
+            </button>
+            <button 
+              onClick={handleLocateOnMap} 
+              className="locate-btn"
+              type="button"
+              disabled={!h3Id}
+            >
+              Locate on Map
+            </button>
+          </div>
         </div>
-      )}
+
+        {h3Polygons.length > 0 && (
+          <div className="drawn-hexagons-section">
+            <h3>Drawn H3 Hexagons ({h3Polygons.length})</h3>
+            <div className="hexagon-list">
+              {h3Polygons.map((polygon, index) => (
+                <div key={`${polygon.id}-${index}`} className="hexagon-item">
+                  <span className="hexagon-id">{polygon.id}</span>
+                  <button 
+                    onClick={() => setH3Polygons(prev => prev.filter((_, i) => i !== index))}
+                    className="remove-hexagon-btn"
+                    title="Remove this hexagon"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button 
+              onClick={() => setH3Polygons([])}
+              className="clear-hexagons-btn"
+            >
+              Clear All Hexagons
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
