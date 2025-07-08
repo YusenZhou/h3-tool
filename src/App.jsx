@@ -107,8 +107,6 @@ function App() {
       const res = parseInt(resolution)
       const zoomLevel = Math.min(15, Math.max(2, 20 - res))
       map.setView([centerCoords.lat, centerCoords.lng], zoomLevel)
-      const boundary = cellToBoundary(h3Id, false)
-      setH3Polygons(prev => [...prev, { id: h3Id, boundary }])
     } catch (err) {
       setError('Error locating on map: ' + err.message)
     }
