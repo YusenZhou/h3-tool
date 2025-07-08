@@ -254,32 +254,29 @@ function App() {
             </button>
           </div>
         </div>
-
-        {h3Polygons.length > 0 && (
-          <div className="drawn-hexagons-section">
-            <h3>Drawn H3 Hexagons ({h3Polygons.length})</h3>
-            <div className="hexagon-list">
-              {h3Polygons.map((polygon, index) => (
-                <div key={`${polygon.id}-${index}`} className="hexagon-item">
-                  {polygon.id}
-                  <button 
-                    onClick={() => setH3Polygons(prev => prev.filter((_, i) => i !== index))}
-                    className="remove-hexagon-btn"
-                    title="Remove this hexagon"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button 
-              onClick={() => setH3Polygons([])}
-              className="clear-hexagons-btn"
-            >
-              Clear All Hexagons
-            </button>
+        <div className="drawn-hexagons-section">
+          <h3>Drawn H3 Hexagons ({h3Polygons.length})</h3>
+          <div className="hexagon-list">
+            {h3Polygons.map((polygon, index) => (
+              <div key={`${polygon.id}-${index}`} className="hexagon-item">
+                {polygon.id}
+                <button 
+                  onClick={() => setH3Polygons(prev => prev.filter((_, i) => i !== index))}
+                  className="remove-hexagon-btn"
+                  title="Remove this hexagon"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
           </div>
-        )}
+          <button 
+            onClick={() => setH3Polygons([])}
+            className="clear-hexagons-btn"
+          >
+            Clear All Hexagons
+          </button>
+        </div>
       </div>
     </div>
   )
