@@ -118,7 +118,6 @@ function App() {
     setH3Id('')
     setHexId('')
     setCenterCoords(null)
-    setH3Polygons([])
     setError('')
   }
 
@@ -218,17 +217,23 @@ function App() {
         
         <div className="result-section">
           <h3>H3 Info</h3>
-          <div className="center-coords">
-            <h4>ID</h4>
-            <div className="coords-display">
-              {h3Id || 'null'}
-            </div>
+          <div className="input-group">
+            <label htmlFor="h3-id">ID</label>
+            <input
+              id="h3-id"
+              type="text"
+              value={h3Id || ''}
+              readOnly
+            />
           </div>
-          <div className="center-coords">
-            <h4>Center Coordinates (Lat, Lng)</h4>
-            <div className="coords-display">
-              {centerCoords ? `${centerCoords.lat.toFixed(6)},${centerCoords.lng.toFixed(6)}` : 'null'}
-            </div>
+          <div className="input-group">
+            <label htmlFor="center-coords">Center Coordinates (Lat, Lng)</label>
+            <input
+              id="center-coords"
+              type="text"
+              value={centerCoords ? `${centerCoords.lat.toFixed(6)},${centerCoords.lng.toFixed(6)}` : ''}
+              readOnly
+            />
           </div>
           <div className="button-group">
             <button 
@@ -237,7 +242,7 @@ function App() {
               type="button"
               disabled={!h3Id}
             >
-              Draw H3 Hexagon on Map
+              Draw on Map
             </button>
             <button 
               onClick={handleLocateOnMap} 
@@ -256,7 +261,7 @@ function App() {
             <div className="hexagon-list">
               {h3Polygons.map((polygon, index) => (
                 <div key={`${polygon.id}-${index}`} className="hexagon-item">
-                  <span className="hexagon-id">{polygon.id}</span>
+                  {polygon.id}
                   <button 
                     onClick={() => setH3Polygons(prev => prev.filter((_, i) => i !== index))}
                     className="remove-hexagon-btn"

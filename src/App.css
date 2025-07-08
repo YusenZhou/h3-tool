@@ -33,49 +33,55 @@ body {
 
 .floating-form {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  right: 15px;
+  top: 8px;
+  left: 8px;
+  right: 8px;
   max-width: 450px;
   z-index: 10;
   background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-  padding: 1.5rem;
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.10);
+  padding: 0.8rem;
 }
 
 h1 {
   color: black;
   text-align: center;
-  margin-bottom: 0.4rem;
-  font-size: 2rem;
+  margin-bottom: 0.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .description {
   color: black;
   text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
+  margin-bottom: 0.7rem;
+  font-size: 0.85rem;
+}
+
+.input-section,
+.result-section,
+.drawn-hexagons-section {
+  background: white;
+  padding: 0.7rem;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.07);
+  margin-bottom: 0.7rem;
 }
 
 .input-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
 }
 
 .input-section:last-of-type {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.7rem;
 }
 
 .input-section-divider {
   text-align: center;
-  margin: 0.8rem 0;
+  margin: 0.4rem 0;
   position: relative;
 }
 
@@ -91,32 +97,32 @@ h1 {
 
 .input-section-divider span {
   background: rgba(255, 255, 255, 0.95);
-  padding: 0 0.8rem;
+  padding: 0 0.4rem;
   color: #6c757d;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 500;
   position: relative;
   z-index: 1;
 }
 
 .input-group {
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.6rem;
 }
 
 .input-group label {
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.2rem;
   font-weight: 600;
   color: #333;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .input-group input {
   width: 100%;
-  padding: 0.6rem 0.8rem;
+  padding: 0.4rem 0.6rem;
   border: 2px solid #e1e5e9;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
   background: #f8f9fa;
 }
@@ -125,7 +131,7 @@ h1 {
   outline: none;
   border-color: #667eea;
   background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.08);
 }
 
 .input-group input::placeholder {
@@ -134,21 +140,29 @@ h1 {
 
 .button-group {
   display: flex;
-  gap: 0.8rem;
-  margin-top: 0.8rem;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
 }
 
-.convert-btn, .clear-btn, .draw-btn, .locate-btn {
-  flex: 1;
-  padding: 0.7rem 1.2rem;
+
+.convert-btn, .clear-btn, .draw-btn, .locate-btn, .clear-hexagons-btn {
+  padding: 0.5rem 0.7rem;
   border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+}
+
+.convert-btn, .clear-btn, .draw-btn, .locate-btn {
+  flex: 1;
+}
+
+.clear-hexagons-btn {
+  width: 100%;
 }
 
 .convert-btn {
@@ -156,21 +170,9 @@ h1 {
   color: white;
 }
 
-.convert-btn:hover {
-  background: #0056b3;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
-}
-
 .clear-btn {
   background: #6c757d;
   color: white;
-}
-
-.clear-btn:hover {
-  background: #545b62;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
 }
 
 .draw-btn {
@@ -178,200 +180,226 @@ h1 {
   color: white;
 }
 
-.draw-btn:hover {
-  background: #1e7e34;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
-}
-
 .locate-btn {
   background: #fd7e14;
   color: white;
 }
 
+.clear-hexagons-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.convert-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 123, 255, 0.18);
+}
+
+.clear-btn:hover {
+  background: #545b62;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(108, 117, 125, 0.18);
+}
+
+.draw-btn:hover {
+  background: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.18);
+}
+
 .locate-btn:hover {
   background: #e55a00;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(253, 126, 20, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(253, 126, 20, 0.18);
+}
+
+.clear-hexagons-btn:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(220, 53, 69, 0.18);
 }
 
 .error-message {
   background: #f8d7da;
   color: #721c24;
-  padding: 0.8rem;
-  border-radius: 6px;
+  padding: 0.5rem;
+  border-radius: 4px;
   border: 1px solid #f5c6cb;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
-.result-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
-}
-
-.result-section h3 {
+.result-section h3,
+.drawn-hexagons-section h3 {
   color: #333;
-  margin-bottom: 0.8rem;
-  font-size: 1.1rem;
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+}
+
+.drawn-hexagons-section h3 {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.h3-result,
+.coords-display {
+  background: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 2px solid #e1e5e9;
 }
 
 .h3-result {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  background: #f8f9fa;
-  padding: 0.8rem;
-  border-radius: 6px;
-  border: 2px solid #e1e5e9;
-}
-
-.center-coords {
-  margin-top: 1.2rem;
-  padding-top: 1.2rem;
-  border-top: 1px solid #e1e5e9;
-}
-
-.center-coords h4 {
-  color: #333;
-  margin-bottom: 0.8rem;
-  font-size: 1rem;
-  font-weight: 600;
+  gap: 0.4rem;
 }
 
 .coords-display {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  background: #f8f9fa;
-  padding: 0.8rem;
-  border-radius: 6px;
-  border: 2px solid #e1e5e9;
+  gap: 0.2rem;
 }
 
-.drawn-hexagons-section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  margin-bottom: 1.5rem;
+.center-coords {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid #e1e5e9;
 }
 
-.drawn-hexagons-section h3 {
+.center-coords h4 {
   color: #333;
-  margin-bottom: 1rem;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .hexagon-list {
-  max-height: 200px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  max-height: 80px;
   overflow-y: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   border: 1px solid #e1e5e9;
-  border-radius: 6px;
+  border-radius: 4px;
   background: #f8f9fa;
+  padding: 0.5rem;
+  width: 100%;
+  min-width: 400px;
+}
+
+.hexagon-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hexagon-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.hexagon-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.hexagon-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .hexagon-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.6rem 0.8rem;
-  border-bottom: 1px solid #e1e5e9;
-  transition: background-color 0.2s ease;
-}
-
-.hexagon-item:last-child {
-  border-bottom: none;
-}
-
-.hexagon-item:hover {
   background: #e9ecef;
+  border-radius: 8px;
+  padding: 0.15rem 0.5rem 0.15rem 0.7rem;
+  margin: 0;
+  border: none;
+  min-width: 0;
+  max-width: 180px;
+  flex: 0 0 calc(50% - 0.25rem);
+  position: relative;
+  height: 2rem;
+  box-sizing: border-box;
 }
 
-.hexagon-id {
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  color: #495057;
-  font-weight: 500;
-  word-break: break-all;
+.hexagon-item input[type="text"] {
+  border: none;
+  background: transparent;
+  font-size: 0.8em;
+  color: #343a40;
+  outline: none;
+  width: auto;
+  min-width: 80px;
+  max-width: 140px;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  font-family: inherit;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .remove-hexagon-btn {
-  background: #dc3545;
-  color: white;
+  margin-left: 0.1rem;
+  background: transparent;
+  color: #adb5bd;
   border: none;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  border-radius: 0;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: bold;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  margin-left: 0.5rem;
+  transition: color 0.2s;
+  z-index: 2;
+  line-height: 1;
+  box-shadow: none;
+  position: static;
+  padding: 0;
 }
 
 .remove-hexagon-btn:hover {
-  background: #c82333;
+  background: transparent;
+  color: #495057;
   transform: scale(1.1);
-}
-
-.clear-hexagons-btn {
-  width: 100%;
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  background: #dc3545;
-  color: white;
-}
-
-.clear-hexagons-btn:hover {
-  background: #c82333;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.3);
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
   .floating-form {
-    padding: 0.8rem;
-    top: 10px;
-    left: 10px;
-    right: 10px;
+    padding: 0.5rem;
+    top: 5px;
+    left: 5px;
+    right: 5px;
   }
   
   h1 {
-    font-size: 1.6rem;
+    font-size: 1.1rem;
   }
   
   .input-section,
   .result-section,
-  .info-section {
-    padding: 1.2rem;
+  .drawn-hexagons-section {
+    padding: 0.5rem;
   }
   
   .button-group {
     flex-direction: column;
+    gap: 0.2rem;
   }
   
   .h3-result {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.2rem;
   }
 }
