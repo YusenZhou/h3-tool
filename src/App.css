@@ -483,6 +483,16 @@ h1 {
   box-shadow: none;
 }
 
+input,
+textarea {
+  color: #111 !important;
+}
+
+.input-section input,
+.input-section textarea {
+  color: #111 !important;
+}
+
 @media (max-width: 768px) {
   .floating-form {
     padding: 0.4rem;
