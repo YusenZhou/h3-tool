@@ -14,10 +14,13 @@ function App() {
   const [error, setError] = useState('')
   const [h3Polygons, setH3Polygons] = useState([])
   const [batchImportText, setBatchImportText] = useState('')
+  const [batchImportCoordsText, setBatchImportCoordsText] = useState('')
+  const [batchImportResolution, setBatchImportResolution] = useState('7')
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('converter')
   const [activeSubTab, setActiveSubTab] = useState('coordinates')
+  const [activeBatchSubTab, setActiveBatchSubTab] = useState('h3ids')
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -84,14 +87,14 @@ function App() {
         
         const [centerLat, centerLng] = cellToLatLng(h3Index)
         setCenterCoords({ lat: centerLat, lng: centerLng })
-      } else if (activeSubTab === 'h3hex') {
+      } else if (activeSubTab === 'h3id') {
         if (!hexId.trim()) {
-          setError('Please enter an H3 hex ID')
+          setError('Please enter an H3 ID')
           return
         }
         
         if (!isValidCell(hexId)) {
-          setError('Please enter a valid H3 hex ID')
+          setError('Please enter a valid H3 ID')
           return
         }
         
@@ -145,7 +148,7 @@ function App() {
     if (activeSubTab === 'coordinates') {
       setCoordinates('')
       setResolution('7')
-    } else if (activeSubTab === 'h3hex') {
+    } else if (activeSubTab === 'h3id') {
       setHexId('')
     }
     setH3Id('')
@@ -158,73 +161,171 @@ function App() {
       setImportError('')
       setImportSuccess('')
       
-      if (!batchImportText.trim()) {
-        setImportError('Please enter H3 IDs to import')
-        return
-      }
-      
-      const h3Ids = batchImportText
-        .split(",")
-        .map(id => id.trim())
-        .filter(id => id.length > 0)
-      
-      const validH3Ids = []
-      const invalidH3Ids = []
-      const duplicateH3Ids = []
-      
-      const existingH3Ids = new Set(h3Polygons.map(polygon => polygon.id))
-      
-      h3Ids.forEach(id => {
-        if (isValidCell(id)) {
-          if (existingH3Ids.has(id)) {
-            duplicateH3Ids.push(id)
+      if (activeBatchSubTab === 'h3ids') {
+        if (!batchImportText.trim()) {
+          setImportError('Please enter H3 IDs to import')
+          return
+        }
+        
+        const h3Ids = batchImportText
+          .split(",")
+          .map(id => id.trim())
+          .filter(id => id.length > 0)
+        
+        const validH3Ids = []
+        const invalidH3Ids = []
+        const duplicateH3Ids = []
+        
+        const existingH3Ids = new Set(h3Polygons.map(polygon => polygon.id))
+        
+        h3Ids.forEach(id => {
+          if (isValidCell(id)) {
+            if (existingH3Ids.has(id)) {
+              duplicateH3Ids.push(id)
+            } else {
+              validH3Ids.push(id)
+            }
           } else {
-            validH3Ids.push(id)
+            invalidH3Ids.push(id)
           }
-        } else {
-          invalidH3Ids.push(id)
+        })
+        
+        if (validH3Ids.length === 0) {
+          if (duplicateH3Ids.length > 0 && invalidH3Ids.length === 0) {
+            setImportError(`All H3 IDs are already in the list: ${duplicateH3Ids.join(', ')}`)
+          } else if (duplicateH3Ids.length > 0 && invalidH3Ids.length > 0) {
+            setImportError(`No new valid H3 IDs found. ${duplicateH3Ids.length} duplicate ID(s): ${duplicateH3Ids.join(', ')}. ${invalidH3Ids.length} invalid ID(s): ${invalidH3Ids.join(', ')}`)
+          } else {
+            setImportError('No new valid H3 IDs found')
+          }
+          return
         }
-      })
-      
-      if (validH3Ids.length === 0) {
-        if (duplicateH3Ids.length > 0 && invalidH3Ids.length === 0) {
-          setImportError(`All H3 IDs are already in the list: ${duplicateH3Ids.join(', ')}`)
-        } else if (duplicateH3Ids.length > 0 && invalidH3Ids.length > 0) {
-          setImportError(`No new valid H3 IDs found. ${duplicateH3Ids.length} duplicate ID(s): ${duplicateH3Ids.join(', ')}. ${invalidH3Ids.length} invalid ID(s): ${invalidH3Ids.join(', ')}`)
-        } else {
-          setImportError('No new valid H3 IDs found')
+        
+        const newPolygons = validH3Ids.map(id => {
+          const boundary = cellToBoundary(id, false)
+          return { id, boundary }
+        })
+        
+        setH3Polygons(prev => [...prev, ...newPolygons])
+        
+        let successMessage = `Successfully imported ${validH3Ids.length} H3 hexagon(s)`
+        let skipMessage = ''
+        
+        if (duplicateH3Ids.length > 0) {
+          skipMessage += `${duplicateH3Ids.length} duplicate ID(s) skipped: ${duplicateH3Ids.join(', ')}`
         }
-        return
+        
+        if (invalidH3Ids.length > 0) {
+          if (skipMessage) skipMessage += '. '
+          skipMessage += `${invalidH3Ids.length} invalid ID(s) skipped: ${invalidH3Ids.join(', ')}`
+        }
+        
+        if (skipMessage) {
+          successMessage += `. ${skipMessage}`
+        }
+        
+        setImportSuccess(successMessage)
+        setBatchImportText('')
+        
+      } else if (activeBatchSubTab === 'coords') {
+        if (!batchImportCoordsText.trim()) {
+          setImportError('Please enter coordinates to import')
+          return
+        }
+        
+        const res = parseInt(batchImportResolution)
+        if (isNaN(res) || res < 0 || res > 15) {
+          setImportError('Please enter a valid resolution level between 0 and 15')
+          return
+        }
+        
+        const coordPairs = batchImportCoordsText
+          .split(",")
+          .map(coord => coord.trim())
+          .filter(coord => coord.length > 0)
+        
+        if (coordPairs.length % 2 !== 0) {
+          setImportError('Coordinates must be in pairs (latitude, longitude)')
+          return
+        }
+        
+        const validCoords = []
+        const invalidCoords = []
+        const duplicateH3Ids = []
+        
+        const existingH3Ids = new Set(h3Polygons.map(polygon => polygon.id))
+        
+        for (let i = 0; i < coordPairs.length; i += 2) {
+          const lat = parseFloat(coordPairs[i])
+          const lng = parseFloat(coordPairs[i + 1])
+          
+          if (isNaN(lat) || isNaN(lng)) {
+            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]}`)
+            continue
+          }
+          
+          if (lat < -90 || lat > 90) {
+            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]} (invalid latitude)`)
+            continue
+          }
+          
+          if (lng < -180 || lng > 180) {
+            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]} (invalid longitude)`)
+            continue
+          }
+          
+                     try {
+             const h3Index = latLngToCell(lat, lng, res)
+             if (existingH3Ids.has(h3Index)) {
+               duplicateH3Ids.push(h3Index)
+             } else {
+               validCoords.push({ lat, lng, h3Index })
+             }
+           } catch {
+             invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]}`)
+           }
+        }
+        
+        if (validCoords.length === 0) {
+          if (duplicateH3Ids.length > 0 && invalidCoords.length === 0) {
+            setImportError(`All coordinates result in H3 IDs already in the list: ${duplicateH3Ids.join(', ')}`)
+          } else if (duplicateH3Ids.length > 0 && invalidCoords.length > 0) {
+            setImportError(`No new valid coordinates found. ${duplicateH3Ids.length} duplicate H3 ID(s): ${duplicateH3Ids.join(', ')}. ${invalidCoords.length} invalid coordinate pair(s): ${invalidCoords.join(', ')}`)
+          } else {
+            setImportError('No new valid coordinates found')
+          }
+          return
+        }
+        
+        const newPolygons = validCoords.map(({ h3Index }) => {
+          const boundary = cellToBoundary(h3Index, false)
+          return { id: h3Index, boundary }
+        })
+        
+        setH3Polygons(prev => [...prev, ...newPolygons])
+        
+        let successMessage = `Successfully imported ${validCoords.length} coordinate pair(s) as H3 hexagon(s)`
+        let skipMessage = ''
+        
+        if (duplicateH3Ids.length > 0) {
+          skipMessage += `${duplicateH3Ids.length} duplicate H3 ID(s) skipped: ${duplicateH3Ids.join(', ')}`
+        }
+        
+        if (invalidCoords.length > 0) {
+          if (skipMessage) skipMessage += '. '
+          skipMessage += `${invalidCoords.length} invalid coordinate pair(s) skipped: ${invalidCoords.join(', ')}`
+        }
+        
+        if (skipMessage) {
+          successMessage += `. ${skipMessage}`
+        }
+        
+        setImportSuccess(successMessage)
+        setBatchImportCoordsText('')
       }
-      
-      const newPolygons = validH3Ids.map(id => {
-        const boundary = cellToBoundary(id, false)
-        return { id, boundary }
-      })
-      
-      setH3Polygons(prev => [...prev, ...newPolygons])
-      
-      let successMessage = `Successfully imported ${validH3Ids.length} H3 hexagon(s)`
-      let skipMessage = ''
-      
-      if (duplicateH3Ids.length > 0) {
-        skipMessage += `${duplicateH3Ids.length} duplicate ID(s) skipped: ${duplicateH3Ids.join(', ')}`
-      }
-      
-      if (invalidH3Ids.length > 0) {
-        if (skipMessage) skipMessage += '. '
-        skipMessage += `${invalidH3Ids.length} invalid ID(s) skipped: ${invalidH3Ids.join(', ')}`
-      }
-      
-      if (skipMessage) {
-        successMessage += `. ${skipMessage}`
-      }
-      
-      setImportSuccess(successMessage)
-      setBatchImportText('')
       
     } catch (err) {
-      setImportError('Error importing H3 IDs: ' + err.message)
+      setImportError('Error importing: ' + err.message)
     }
   }
 
@@ -252,7 +353,7 @@ function App() {
       <div className="map-background">
         <MapContainer
           ref={mapRef}
-          center={[0, 0]}
+          center={[0, -60]}
           zoom={minZoom}
           minZoom={minZoom}
           maxZoom={15}
@@ -284,7 +385,7 @@ function App() {
       <div className="floating-form">
         <h1>H3 Tool</h1>
         <p className="description">
-          Get Uber H3 info and draw on map from coordinates or H3 hex IDs
+          Get Uber H3 info and draw on map from coordinates or H3 IDs
         </p>
         
         <div className="tab-navigation">
@@ -303,7 +404,8 @@ function App() {
         </div>
 
         {activeTab === 'converter' && (
-          <>
+          <div className="sub-section">
+            <h3>Search</h3>
             <div className="sub-tab-navigation">
               <button 
                 className={`sub-tab-button ${activeSubTab === 'coordinates' ? 'active' : ''}`}
@@ -312,10 +414,10 @@ function App() {
                 Coordinates
               </button>
               <button 
-                className={`sub-tab-button ${activeSubTab === 'h3hex' ? 'active' : ''}`}
-                onClick={() => setActiveSubTab('h3hex')}
+                className={`sub-tab-button ${activeSubTab === 'h3id' ? 'active' : ''}`}
+                onClick={() => setActiveSubTab('h3id')}
               >
-                H3 Hex ID
+                H3 ID
               </button>
             </div>
 
@@ -345,20 +447,11 @@ function App() {
                       onChange={(e) => setResolution(e.target.value)}
                     />
                   </div>
-                  
-                  <div className="button-group">
-                    <button onClick={handleConvert} className="convert-btn">
-                      Get H3 info
-                    </button>
-                    <button onClick={handleClear} className="clear-btn">
-                      Clear
-                    </button>
-                  </div>
                 </div>
               </>
             )}
 
-            {activeSubTab === 'h3hex' && (
+            {activeSubTab === 'h3id' && (
               <>
                 <div className="input-section">
                   <div className="input-group">
@@ -371,18 +464,18 @@ function App() {
                       onChange={(e) => setHexId(e.target.value)}
                     />
                   </div>
-                  
-                  <div className="button-group">
-                    <button onClick={handleConvert} className="convert-btn">
-                      Get H3 info
-                    </button>
-                    <button onClick={handleClear} className="clear-btn">
-                      Clear
-                    </button>
-                  </div>
                 </div>
               </>
             )}
+
+            <div className="button-group">
+              <button onClick={handleConvert} className="convert-btn">
+                Get H3 info
+              </button>
+              <button onClick={handleClear} className="clear-btn">
+                Clear
+              </button>
+            </div>
             
             {error && (
               <div className="error-message">
@@ -429,32 +522,93 @@ function App() {
                 </button>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === 'batch-import' && (
-          <div className="batch-import-section">
+          <div className="sub-section">
             <h3>Batch Import</h3>
-            <div className="input-group">
-              <label htmlFor="batch-import-text">H3 IDs (comma separated):</label>
-              <textarea
-                id="batch-import-text"
-                rows="5"
-                placeholder="Enter H3 IDs to import, separated by commas&#10;e.g.: 8928308280fffff, 8928308281fffff, 8928308282fffff"
-                value={batchImportText}
-                onChange={(e) => setBatchImportText(e.target.value)}
-              />
-            </div>
-            <div className="button-group">
-              <button onClick={handleBatchImport} className="import-btn">
-                Import H3 IDs
+            <div className="sub-tab-navigation">
+              <button 
+                className={`sub-tab-button ${activeBatchSubTab === 'coords' ? 'active' : ''}`}
+                onClick={() => setActiveBatchSubTab('coords')}
+              >
+                Coordinates
+              </button>
+              <button 
+                className={`sub-tab-button ${activeBatchSubTab === 'h3ids' ? 'active' : ''}`}
+                onClick={() => setActiveBatchSubTab('h3ids')}
+              >
+                H3 IDs
               </button>
             </div>
-            {importError && (
-              <div className="error-message">{importError}</div>
+
+            {activeBatchSubTab === 'h3ids' && (
+              <>
+                <div className="input-section">
+                  <div className="input-group">
+                    <label htmlFor="batch-import-text">H3 IDs (comma separated):</label>
+                    <textarea
+                      id="batch-import-text"
+                      rows="5"
+                      placeholder="Enter H3 IDs to import, separated by commas&#10;e.g.: 8928308280fffff, 8928308281fffff, 8928308282fffff"
+                      value={batchImportText}
+                      onChange={(e) => setBatchImportText(e.target.value)}
+                    />
+                  </div>
+                  <div className="button-group">
+                    <button onClick={handleBatchImport} className="import-btn">
+                      Import H3 IDs
+                    </button>
+                  </div>
+                  {importError && (
+                    <div className="error-message">{importError}</div>
+                  )}
+                  {importSuccess && (
+                    <div className="success-message">{importSuccess}</div>
+                  )}
+                </div>
+              </>
             )}
-            {importSuccess && (
-              <div className="success-message">{importSuccess}</div>
+
+            {activeBatchSubTab === 'coords' && (
+              <>
+                <div className="input-section">
+                  <div className="input-group">
+                    <label htmlFor="batch-import-coords-text">Coordinates (comma separated, Lat, Lng):</label>
+                    <textarea
+                      id="batch-import-coords-text"
+                      rows="5"
+                      placeholder="Enter coordinates to import, separated by commas&#10;e.g.: 37.7749,-122.4194, 40.7128,-74.0060, 51.5074,-0.1278"
+                      value={batchImportCoordsText}
+                      onChange={(e) => setBatchImportCoordsText(e.target.value)}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="batch-import-resolution">Resolution Level (0-15):</label>
+                    <input
+                      id="batch-import-resolution"
+                      type="number"
+                      min="0"
+                      max="15"
+                      placeholder="e.g., 9"
+                      value={batchImportResolution}
+                      onChange={(e) => setBatchImportResolution(e.target.value)}
+                    />
+                  </div>
+                  <div className="button-group">
+                    <button onClick={handleBatchImport} className="import-btn">
+                      Import Coordinates
+                    </button>
+                  </div>
+                  {importError && (
+                    <div className="error-message">{importError}</div>
+                  )}
+                  {importSuccess && (
+                    <div className="success-message">{importSuccess}</div>
+                  )}
+                </div>
+              </>
             )}
           </div>
         )}
