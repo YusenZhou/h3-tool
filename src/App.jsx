@@ -13,6 +13,9 @@ function App() {
   const [centerCoords, setCenterCoords] = useState(null)
   const [error, setError] = useState('')
   const [h3Polygons, setH3Polygons] = useState([])
+  const [batchImportText, setBatchImportText] = useState('')
+  const [importError, setImportError] = useState('')
+  const [importSuccess, setImportSuccess] = useState('')
   const mapRef = useRef(null)
 
   const handleConvert = () => {
@@ -119,6 +122,100 @@ function App() {
     setHexId('')
     setCenterCoords(null)
     setError('')
+  }
+
+  const handleBatchImport = () => {
+    try {
+      setImportError('')
+      setImportSuccess('')
+      
+      if (!batchImportText.trim()) {
+        setImportError('Please enter H3 IDs to import')
+        return
+      }
+      
+      const h3Ids = batchImportText
+        .split(",")
+        .map(id => id.trim())
+        .filter(id => id.length > 0)
+      
+      const validH3Ids = []
+      const invalidH3Ids = []
+      const duplicateH3Ids = []
+      
+      const existingH3Ids = new Set(h3Polygons.map(polygon => polygon.id))
+      
+      h3Ids.forEach(id => {
+        if (isValidCell(id)) {
+          if (existingH3Ids.has(id)) {
+            duplicateH3Ids.push(id)
+          } else {
+            validH3Ids.push(id)
+          }
+        } else {
+          invalidH3Ids.push(id)
+        }
+      })
+      
+      if (validH3Ids.length === 0) {
+        if (duplicateH3Ids.length > 0 && invalidH3Ids.length === 0) {
+          setImportError(`All H3 IDs are already in the list: ${duplicateH3Ids.join(', ')}`)
+        } else if (duplicateH3Ids.length > 0 && invalidH3Ids.length > 0) {
+          setImportError(`No new valid H3 IDs found. ${duplicateH3Ids.length} duplicate ID(s): ${duplicateH3Ids.join(', ')}. ${invalidH3Ids.length} invalid ID(s): ${invalidH3Ids.join(', ')}`)
+        } else {
+          setImportError('No new valid H3 IDs found')
+        }
+        return
+      }
+      
+      const newPolygons = validH3Ids.map(id => {
+        const boundary = cellToBoundary(id, false)
+        return { id, boundary }
+      })
+      
+      setH3Polygons(prev => [...prev, ...newPolygons])
+      
+      let successMessage = `Successfully imported ${validH3Ids.length} H3 hexagon(s)`
+      let skipMessage = ''
+      
+      if (duplicateH3Ids.length > 0) {
+        skipMessage += `${duplicateH3Ids.length} duplicate ID(s) skipped: ${duplicateH3Ids.join(', ')}`
+      }
+      
+      if (invalidH3Ids.length > 0) {
+        if (skipMessage) skipMessage += '. '
+        skipMessage += `${invalidH3Ids.length} invalid ID(s) skipped: ${invalidH3Ids.join(', ')}`
+      }
+      
+      if (skipMessage) {
+        successMessage += `. ${skipMessage}`
+      }
+      
+      setImportSuccess(successMessage)
+      setBatchImportText('')
+      
+    } catch (err) {
+      setImportError('Error importing H3 IDs: ' + err.message)
+    }
+  }
+
+  const handleCopyToClipboard = () => {
+    try {
+      if (h3Polygons.length === 0) {
+        setError('No H3 hexagons to copy')
+        return
+      }
+      
+      const h3Ids = h3Polygons.map(polygon => polygon.id).join('\n')
+      navigator.clipboard.writeText(h3Ids).then(() => {
+        setImportSuccess('H3 IDs copied to clipboard!')
+        setTimeout(() => setImportSuccess(''), 3000)
+      }).catch(() => {
+        setError('Failed to copy to clipboard')
+      })
+    } catch (err) {
+      setError('Error copying H3 IDs: ' + err.message)
+    }
   }
 
   return (
@@ -270,12 +367,41 @@ function App() {
               </div>
             ))}
           </div>
-          <button 
-            onClick={() => setH3Polygons([])}
-            className="clear-hexagons-btn"
-          >
-            Clear All Hexagons
-          </button>
+          <div className="button-group">
+            <button onClick={handleCopyToClipboard} className="convert-btn">
+              Copy to Clipboard
+            </button>
+            <button 
+              onClick={() => setH3Polygons([])}
+              className="clear-btn"
+            >
+              Clear All Hexagons
+            </button>
+          </div>
+        </div>
+        <div className="batch-import-section">
+          <h3>Batch Import</h3>
+          <div className="input-group">
+            <label htmlFor="batch-import-text">H3 IDs (comma separated):</label>
+            <textarea
+              id="batch-import-text"
+              rows="5"
+              placeholder="Enter H3 IDs to import, separated by commas&#10;e.g.: 8928308280fffff, 8928308281fffff, 8928308282fffff"
+              value={batchImportText}
+              onChange={(e) => setBatchImportText(e.target.value)}
+            />
+          </div>
+          <div className="button-group">
+            <button onClick={handleBatchImport} className="import-btn">
+              Import H3 IDs
+            </button>
+          </div>
+          {importError && (
+            <div className="error-message">{importError}</div>
+          )}
+          {importSuccess && (
+            <div className="success-message">{importSuccess}</div>
+          )}
         </div>
       </div>
     </div>
