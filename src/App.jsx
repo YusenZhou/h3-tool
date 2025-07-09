@@ -41,6 +41,18 @@ function App() {
 
   const minZoom = Math.floor(windowSize.height / 540) + 1
 
+  const extractLatLngPairsFromString = (input) => {
+    let str = input;
+    const numbers = str.match(/-?\d+(?:\.\d+)?/g)?.map(Number) || [];
+    console.log(numbers)
+    const pairs = [];
+    for (let i = 0; i < numbers.length - 1; i += 2) {
+      pairs.push([numbers[i], numbers[i + 1]]);
+    }
+    return pairs;
+  }
+  
+
   const handleConvert = () => {
     try {
       setError('')
@@ -51,7 +63,7 @@ function App() {
           return
         }
         
-        const coords = coordinates.split(',').map(coord => coord.trim())
+        const coords = extractLatLngPairsFromString(coordinates)
         if (coords.length !== 2) {
           setError('Please enter coordinates in format: latitude, longitude')
           return
@@ -238,14 +250,9 @@ function App() {
           setImportError('Please enter a valid resolution level between 0 and 15')
           return
         }
-        
-        const coordPairs = batchImportCoordsText
-          .split(",")
-          .map(coord => coord.trim())
-          .filter(coord => coord.length > 0)
-        
-        if (coordPairs.length % 2 !== 0) {
-          setImportError('Coordinates must be in pairs (latitude, longitude)')
+        const pairs = extractLatLngPairsFromString(batchImportCoordsText);
+        if (pairs.length === 0) {
+          setImportError('No valid coordinate pairs found')
           return
         }
         
@@ -254,36 +261,31 @@ function App() {
         const duplicateH3Ids = []
         
         const existingH3Ids = new Set(h3Polygons.map(polygon => polygon.id))
-        
-        for (let i = 0; i < coordPairs.length; i += 2) {
-          const lat = parseFloat(coordPairs[i])
-          const lng = parseFloat(coordPairs[i + 1])
-          
+        for (const [lat, lng] of pairs) {
           if (isNaN(lat) || isNaN(lng)) {
-            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]}`)
+            invalidCoords.push(`${lat}, ${lng}`)
             continue
           }
           
           if (lat < -90 || lat > 90) {
-            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]} (invalid latitude)`)
+            invalidCoords.push(`${lat}, ${lng} (invalid latitude)`)
             continue
           }
           
           if (lng < -180 || lng > 180) {
-            invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]} (invalid longitude)`)
+            invalidCoords.push(`${lat}, ${lng} (invalid longitude)`)
             continue
           }
-          
-                     try {
-             const h3Index = latLngToCell(lat, lng, res)
-             if (existingH3Ids.has(h3Index)) {
-               duplicateH3Ids.push(h3Index)
-             } else {
-               validCoords.push({ lat, lng, h3Index })
-             }
-           } catch {
-             invalidCoords.push(`${coordPairs[i]}, ${coordPairs[i + 1]}`)
-           }
+          try {
+            const h3Index = latLngToCell(lat, lng, res)
+            if (existingH3Ids.has(h3Index)) {
+              duplicateH3Ids.push(h3Index)
+            } else {
+              validCoords.push({ lat, lng, h3Index })
+            }
+          } catch {
+            invalidCoords.push(`${lat}, ${lng}`)
+          }
         }
         
         if (validCoords.length === 0) {
@@ -575,7 +577,7 @@ function App() {
                     <textarea
                       id="batch-import-coords-text"
                       rows="5"
-                      placeholder="Enter coordinates to import, separated by commas&#10;e.g.: 37.7749,-122.4194, 40.7128,-74.0060, 51.5074,-0.1278"
+                      placeholder="Enter any text/json containing coordinates to import&#10;e.g.: 37.7749,-122.4194, 40.7128,-74.0060, 51.5074,-0.1278"
                       value={batchImportCoordsText}
                       onChange={(e) => setBatchImportCoordsText(e.target.value)}
                     />

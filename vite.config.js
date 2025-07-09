@@ -5,4 +5,5 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: "/h3-tool",
+  build: { chunkSizeWarningLimit: 1600, }
 })
