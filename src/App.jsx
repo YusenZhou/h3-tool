@@ -16,6 +16,7 @@ function App() {
   const [batchImportText, setBatchImportText] = useState('')
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
+  const [activeTab, setActiveTab] = useState('converter')
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -273,102 +274,149 @@ function App() {
       <div className="floating-form">
         <h1>H3 Tool</h1>
         <p className="description">
-          Get Uber H3 Hexagon info from coordinates or H3 hex ID
+          Get Uber H3 info and draw on map from coordinates or H3 hex IDs
         </p>
         
-        <div className="input-section">
-          <div className="input-group">
-            <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
-            <input
-              id="coordinates"
-              type="text"
-              placeholder="e.g., 37.7749, -122.4194"
-              value={coordinates}
-              onChange={(e) => setCoordinates(e.target.value)}
-            />
-          </div>
-          
-          <div className="input-group">
-            <label htmlFor="resolution">Resolution Level (0-15):</label>
-            <input
-              id="resolution"
-              type="number"
-              min="0"
-              max="15"
-              placeholder="e.g., 9"
-              value={resolution}
-              onChange={(e) => setResolution(e.target.value)}
-            />
-          </div>
-            <div className="input-section-divider">
-            <span>OR</span>
-          </div>
-          <div className="input-group">
-            <label htmlFor="hexId">H3 Hex ID:</label>
-            <input
-              id="hexId"
-              type="text"
-              placeholder="e.g., 8928308280fffff"
-              value={hexId}
-              onChange={(e) => setHexId(e.target.value)}
-            />
-          </div>
-          
-          <div className="button-group">
-            <button onClick={handleConvert} className="convert-btn">
-              Get H3 info
-            </button>
-            <button onClick={handleClear} className="clear-btn">
-              Clear
-            </button>
-          </div>
+        <div className="tab-navigation">
+          <button 
+            className={`tab-button ${activeTab === 'converter' ? 'active' : ''}`}
+            onClick={() => setActiveTab('converter')}
+          >
+            Search
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'batch-import' ? 'active' : ''}`}
+            onClick={() => setActiveTab('batch-import')}
+          >
+            Batch Import
+          </button>
         </div>
-        
-        {error && (
-          <div className="error-message">
-            {error}
+
+        {activeTab === 'converter' && (
+          <>
+            <div className="input-section">
+              <div className="input-group">
+                <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
+                <input
+                  id="coordinates"
+                  type="text"
+                  placeholder="e.g., 37.7749, -122.4194"
+                  value={coordinates}
+                  onChange={(e) => setCoordinates(e.target.value)}
+                />
+              </div>
+              
+              <div className="input-group">
+                <label htmlFor="resolution">Resolution Level (0-15):</label>
+                <input
+                  id="resolution"
+                  type="number"
+                  min="0"
+                  max="15"
+                  placeholder="e.g., 9"
+                  value={resolution}
+                  onChange={(e) => setResolution(e.target.value)}
+                />
+              </div>
+                <div className="input-section-divider">
+                <span>OR</span>
+              </div>
+              <div className="input-group">
+                <label htmlFor="hexId">H3 Hex ID:</label>
+                <input
+                  id="hexId"
+                  type="text"
+                  placeholder="e.g., 8928308280fffff"
+                  value={hexId}
+                  onChange={(e) => setHexId(e.target.value)}
+                />
+              </div>
+              
+              <div className="button-group">
+                <button onClick={handleConvert} className="convert-btn">
+                  Get H3 info
+                </button>
+                <button onClick={handleClear} className="clear-btn">
+                  Clear
+                </button>
+              </div>
+            </div>
+            
+            {error && (
+              <div className="error-message">
+                {error}
+              </div>
+            )}
+            
+            <div className="result-section">
+              <h3>H3 Info</h3>
+              <div className="input-group">
+                <label htmlFor="h3-id">ID</label>
+                <input
+                  id="h3-id"
+                  type="text"
+                  value={h3Id || ''}
+                  readOnly
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="center-coords">Center Coordinates (Lat, Lng)</label>
+                <input
+                  id="center-coords"
+                  type="text"
+                  value={centerCoords ? `${centerCoords.lat.toFixed(6)},${centerCoords.lng.toFixed(6)}` : ''}
+                  readOnly
+                />
+              </div>
+              <div className="button-group">
+                <button 
+                  onClick={handleDrawH3} 
+                  className="draw-btn"
+                  type="button"
+                  disabled={!h3Id}
+                >
+                  Draw on Map
+                </button>
+                <button 
+                  onClick={handleLocateOnMap} 
+                  className="locate-btn"
+                  type="button"
+                  disabled={!h3Id}
+                >
+                  Locate on Map
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'batch-import' && (
+          <div className="batch-import-section">
+            <h3>Batch Import</h3>
+            <div className="input-group">
+              <label htmlFor="batch-import-text">H3 IDs (comma separated):</label>
+              <textarea
+                id="batch-import-text"
+                rows="5"
+                placeholder="Enter H3 IDs to import, separated by commas&#10;e.g.: 8928308280fffff, 8928308281fffff, 8928308282fffff"
+                value={batchImportText}
+                onChange={(e) => setBatchImportText(e.target.value)}
+              />
+            </div>
+            <div className="button-group">
+              <button onClick={handleBatchImport} className="import-btn">
+                Import H3 IDs
+              </button>
+            </div>
+            {importError && (
+              <div className="error-message">{importError}</div>
+            )}
+            {importSuccess && (
+              <div className="success-message">{importSuccess}</div>
+            )}
           </div>
         )}
-        
-        <div className="result-section">
-          <h3>H3 Info</h3>
-          <div className="input-group">
-            <label htmlFor="h3-id">ID</label>
-            <input
-              id="h3-id"
-              type="text"
-              value={h3Id || ''}
-              readOnly
-            />
-          </div>
-          <div className="input-group">
-            <label htmlFor="center-coords">Center Coordinates (Lat, Lng)</label>
-            <input
-              id="center-coords"
-              type="text"
-              value={centerCoords ? `${centerCoords.lat.toFixed(6)},${centerCoords.lng.toFixed(6)}` : ''}
-              readOnly
-            />
-          </div>
-          <div className="button-group">
-            <button 
-              onClick={handleDrawH3} 
-              className="draw-btn"
-              type="button"
-              disabled={!h3Id}
-            >
-              Draw on Map
-            </button>
-            <button 
-              onClick={handleLocateOnMap} 
-              className="locate-btn"
-              type="button"
-              disabled={!h3Id}
-            >
-              Locate on Map
-            </button>
-          </div>
-        </div>
+
         <div className="drawn-hexagons-section">
           <h3>Drawn H3 Hexagons ({h3Polygons.length})</h3>
           <div className="hexagon-list">
@@ -396,30 +444,6 @@ function App() {
               Clear All Hexagons
             </button>
           </div>
-        </div>
-        <div className="batch-import-section">
-          <h3>Batch Import</h3>
-          <div className="input-group">
-            <label htmlFor="batch-import-text">H3 IDs (comma separated):</label>
-            <textarea
-              id="batch-import-text"
-              rows="5"
-              placeholder="Enter H3 IDs to import, separated by commas&#10;e.g.: 8928308280fffff, 8928308281fffff, 8928308282fffff"
-              value={batchImportText}
-              onChange={(e) => setBatchImportText(e.target.value)}
-            />
-          </div>
-          <div className="button-group">
-            <button onClick={handleBatchImport} className="import-btn">
-              Import H3 IDs
-            </button>
-          </div>
-          {importError && (
-            <div className="error-message">{importError}</div>
-          )}
-          {importSuccess && (
-            <div className="success-message">{importSuccess}</div>
-          )}
         </div>
       </div>
     </div>

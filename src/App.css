@@ -61,6 +61,41 @@ h1 {
   font-size: 0.85rem;
 }
 
+.tab-navigation {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 0.2rem;
+  margin-bottom: 0.7rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.tab-button {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tab-button:hover {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+}
+
+.tab-button.active {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
 .input-section,
 .result-section,
 .drawn-hexagons-section,
