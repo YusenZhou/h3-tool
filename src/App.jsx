@@ -421,39 +421,36 @@ function App() {
               </button>
             </div>
 
-            {activeSubTab === 'coordinates' && (
-              <>
-                <div className="input-section">
+            <div className="input-section">
+              {activeSubTab === 'coordinates' && (
+                <>
                   <div className="input-group">
-                    <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
-                    <input
-                      id="coordinates"
-                      type="text"
-                      placeholder="e.g., 37.7749, -122.4194"
-                      value={coordinates}
-                      onChange={(e) => setCoordinates(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="input-group">
-                    <label htmlFor="resolution">Resolution Level (0-15):</label>
-                    <input
-                      id="resolution"
-                      type="number"
-                      min="0"
-                      max="15"
-                      placeholder="e.g., 9"
-                      value={resolution}
-                      onChange={(e) => setResolution(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </>
-            )}
-
-            {activeSubTab === 'h3id' && (
-              <>
-                <div className="input-section">
+                      <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
+                      <input
+                        id="coordinates"
+                        type="text"
+                        placeholder="e.g., 37.7749, -122.4194"
+                        value={coordinates}
+                        onChange={(e) => setCoordinates(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="input-group">
+                      <label htmlFor="resolution">Resolution Level (0-15):</label>
+                      <input
+                        id="resolution"
+                        type="number"
+                        min="0"
+                        max="15"
+                        placeholder="e.g., 9"
+                        value={resolution}
+                        onChange={(e) => setResolution(e.target.value)}
+                      />
+                    </div>
+                </>
+              )}
+              {activeSubTab === 'h3id' && (
+                <>
                   <div className="input-group">
                     <label htmlFor="hexId">H3 Hex ID:</label>
                     <input
@@ -464,17 +461,16 @@ function App() {
                       onChange={(e) => setHexId(e.target.value)}
                     />
                   </div>
-                </div>
-              </>
-            )}
-
-            <div className="button-group">
-              <button onClick={handleConvert} className="convert-btn">
-                Get H3 info
-              </button>
-              <button onClick={handleClear} className="clear-btn">
-                Clear
-              </button>
+                </>
+              )}
+              <div className="button-group">
+                <button onClick={handleConvert} className="convert-btn">
+                  Get H3 info
+                </button>
+                <button onClick={handleClear} className="clear-btn">
+                  Clear
+                </button>
+              </div>
             </div>
             
             {error && (
