@@ -17,6 +17,7 @@ function App() {
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('converter')
+  const [activeSubTab, setActiveSubTab] = useState('coordinates')
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -41,7 +42,12 @@ function App() {
     try {
       setError('')
       
-      if (coordinates.trim()) {
+      if (activeSubTab === 'coordinates') {
+        if (!coordinates.trim()) {
+          setError('Please enter coordinates')
+          return
+        }
+        
         const coords = coordinates.split(',').map(coord => coord.trim())
         if (coords.length !== 2) {
           setError('Please enter coordinates in format: latitude, longitude')
@@ -78,7 +84,12 @@ function App() {
         
         const [centerLat, centerLng] = cellToLatLng(h3Index)
         setCenterCoords({ lat: centerLat, lng: centerLng })
-      } else if (hexId.trim()) {
+      } else if (activeSubTab === 'h3hex') {
+        if (!hexId.trim()) {
+          setError('Please enter an H3 hex ID')
+          return
+        }
+        
         if (!isValidCell(hexId)) {
           setError('Please enter a valid H3 hex ID')
           return
@@ -91,10 +102,6 @@ function App() {
         
         const res = hexId.length - 1
         setResolution(res.toString())
-      }
-      else {
-        setError('Please enter either coordinates or H3 hex ID')
-        return
       }
       
     } catch (err) {
@@ -135,10 +142,13 @@ function App() {
   }
 
   const handleClear = () => {
-    setCoordinates('')
-    setResolution('7')
+    if (activeSubTab === 'coordinates') {
+      setCoordinates('')
+      setResolution('7')
+    } else if (activeSubTab === 'h3hex') {
+      setHexId('')
+    }
     setH3Id('')
-    setHexId('')
     setCenterCoords(null)
     setError('')
   }
@@ -294,53 +304,85 @@ function App() {
 
         {activeTab === 'converter' && (
           <>
-            <div className="input-section">
-              <div className="input-group">
-                <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
-                <input
-                  id="coordinates"
-                  type="text"
-                  placeholder="e.g., 37.7749, -122.4194"
-                  value={coordinates}
-                  onChange={(e) => setCoordinates(e.target.value)}
-                />
-              </div>
-              
-              <div className="input-group">
-                <label htmlFor="resolution">Resolution Level (0-15):</label>
-                <input
-                  id="resolution"
-                  type="number"
-                  min="0"
-                  max="15"
-                  placeholder="e.g., 9"
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                />
-              </div>
-                <div className="input-section-divider">
-                <span>OR</span>
-              </div>
-              <div className="input-group">
-                <label htmlFor="hexId">H3 Hex ID:</label>
-                <input
-                  id="hexId"
-                  type="text"
-                  placeholder="e.g., 8928308280fffff"
-                  value={hexId}
-                  onChange={(e) => setHexId(e.target.value)}
-                />
-              </div>
-              
-              <div className="button-group">
-                <button onClick={handleConvert} className="convert-btn">
-                  Get H3 info
-                </button>
-                <button onClick={handleClear} className="clear-btn">
-                  Clear
-                </button>
-              </div>
+            <div className="sub-tab-navigation">
+              <button 
+                className={`sub-tab-button ${activeSubTab === 'coordinates' ? 'active' : ''}`}
+                onClick={() => setActiveSubTab('coordinates')}
+              >
+                Coordinates
+              </button>
+              <button 
+                className={`sub-tab-button ${activeSubTab === 'h3hex' ? 'active' : ''}`}
+                onClick={() => setActiveSubTab('h3hex')}
+              >
+                H3 Hex ID
+              </button>
             </div>
+
+            {activeSubTab === 'coordinates' && (
+              <>
+                <div className="input-section">
+                  <div className="input-group">
+                    <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
+                    <input
+                      id="coordinates"
+                      type="text"
+                      placeholder="e.g., 37.7749, -122.4194"
+                      value={coordinates}
+                      onChange={(e) => setCoordinates(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="input-group">
+                    <label htmlFor="resolution">Resolution Level (0-15):</label>
+                    <input
+                      id="resolution"
+                      type="number"
+                      min="0"
+                      max="15"
+                      placeholder="e.g., 9"
+                      value={resolution}
+                      onChange={(e) => setResolution(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="button-group">
+                    <button onClick={handleConvert} className="convert-btn">
+                      Get H3 info
+                    </button>
+                    <button onClick={handleClear} className="clear-btn">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeSubTab === 'h3hex' && (
+              <>
+                <div className="input-section">
+                  <div className="input-group">
+                    <label htmlFor="hexId">H3 Hex ID:</label>
+                    <input
+                      id="hexId"
+                      type="text"
+                      placeholder="e.g., 8928308280fffff"
+                      value={hexId}
+                      onChange={(e) => setHexId(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="button-group">
+                    <button onClick={handleConvert} className="convert-btn">
+                      Get H3 info
+                    </button>
+                    <button onClick={handleClear} className="clear-btn">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
             
             {error && (
               <div className="error-message">
