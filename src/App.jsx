@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { latLngToCell, cellToLatLng, cellToBoundary, isValidCell } from 'h3-js'
 import { MapContainer, TileLayer, ZoomControl, Polygon } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -16,7 +16,25 @@ function App() {
   const [batchImportText, setBatchImportText] = useState('')
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  })
   const mapRef = useRef(null)
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      })
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  const minZoom = Math.floor(windowSize.height / 540) + 1
 
   const handleConvert = () => {
     try {
@@ -108,7 +126,7 @@ function App() {
       setError('')
       const map = mapRef.current
       const res = parseInt(resolution)
-      const zoomLevel = Math.min(15, Math.max(2, 20 - res))
+      const zoomLevel = Math.min(15, Math.max(minZoom, 20 - res))
       map.setView([centerCoords.lat, centerCoords.lng], zoomLevel)
     } catch (err) {
       setError('Error locating on map: ' + err.message)
@@ -224,8 +242,8 @@ function App() {
         <MapContainer
           ref={mapRef}
           center={[0, 0]}
-          zoom={2}
-          minZoom={2}
+          zoom={minZoom}
+          minZoom={minZoom}
           maxZoom={15}
           style={{ height: '100vh', width: '100vw' }}
           zoomControl={false}
