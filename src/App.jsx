@@ -336,7 +336,7 @@ function App() {
         return
       }
       
-      const h3Ids = h3Polygons.map(polygon => polygon.id).join('\n')
+      const h3Ids = h3Polygons.map(polygon => polygon.id).join(',')
       navigator.clipboard.writeText(h3Ids).then(() => {
         setImportSuccess('H3 IDs copied to clipboard!')
         setTimeout(() => setImportSuccess(''), 3000)
@@ -356,7 +356,7 @@ function App() {
           center={[0, -60]}
           zoom={minZoom}
           minZoom={minZoom}
-          maxZoom={15}
+          maxZoom={20}
           style={{ height: '100vh', width: '100vw' }}
           zoomControl={false}
           maxBounds={[[-90, -Infinity], [90, Infinity]]}
