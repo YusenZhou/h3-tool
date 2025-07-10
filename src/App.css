@@ -574,6 +574,9 @@ textarea {
   cursor: crosshair !important;
 }
 
+.map-selecting-coordinates .leaflet-container {
+  cursor: crosshair !important;}
+
 .info-message {
   background: #d1ecf1;
   color: #0c5460;

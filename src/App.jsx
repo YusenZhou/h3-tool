@@ -209,8 +209,18 @@ function App() {
   }
 
   const handleSelectFromMap = () => {
-    setIsSelectingFromMap(!isSelectingFromMap)
+    const mapMode = !isSelectingFromMap
+    setIsSelectingFromMap(mapMode)
     setError('')
+    
+    const mapContainer = document.querySelector('.leaflet-container')
+    if (mapContainer) {
+      if (mapMode) {
+        mapContainer.parentElement.classList.add('map-selecting-coordinates')
+      } else {
+        mapContainer.parentElement.classList.remove('map-selecting-coordinates')
+      }
+    }
   }
 
   const handleToggleMapSelectionMode = () => {
@@ -731,7 +741,7 @@ function App() {
                   className={`convert-btn ${isMapSelectionMode ? 'active' : ''}`}
                   type="button"
                 >
-                  {isMapSelectionMode ? 'Stop Selection' : 'Start Selection'}
+                  {isMapSelectionMode ? 'Stop Selection' : 'Start Selection 📍'}
                 </button>
               </div>
               {isMapSelectionMode && (
