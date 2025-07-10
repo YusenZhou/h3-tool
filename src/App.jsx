@@ -21,6 +21,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('converter')
   const [activeSubTab, setActiveSubTab] = useState('coordinates')
   const [activeBatchSubTab, setActiveBatchSubTab] = useState('coords')
+  const [mapSelectionResolution, setMapSelectionResolution] = useState('7')
+  const [isMapSelectionMode, setIsMapSelectionMode] = useState(false)
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -33,6 +35,24 @@ function App() {
       click: (e) => {
         if (isSelectingFromMap) {
           setCoordinates(`${e.latlng.lat.toFixed(8)}, ${e.latlng.lng.toFixed(8)}`)
+        }
+        if (isMapSelectionMode) {
+          const lat = e.latlng.lat
+          const lng = e.latlng.lng
+          const res = parseInt(mapSelectionResolution)
+          try {
+            const h3Index = latLngToCell(lat, lng, res)
+            setH3Polygons(prev => {
+              const exists = prev.some(polygon => polygon.id === h3Index)
+              if (exists) {
+                return prev.filter(polygon => polygon.id !== h3Index)
+              } else {
+                return [...prev, { id: h3Index, boundary: cellToBoundary(h3Index, false) }]
+              }
+            })
+          } catch (err) {
+            console.error('Error adding H3 cell:', err)
+          }
         }
       }
     })
@@ -145,7 +165,15 @@ function App() {
     try {
       setError('')
       const boundary = cellToBoundary(h3Id, false)
-      setH3Polygons(prev => [...prev, { id: h3Id, boundary }])
+      setH3Polygons(prev => {
+        const exists = prev.some(polygon => polygon.id === h3Id)
+        if (exists) {
+          setError('This H3 hexagon is already drawn on the map')
+          return prev
+        } else {
+          return [...prev, { id: h3Id, boundary }]
+        }
+      })
     } catch (err) {
       setError('Error drawing H3 hexagon: ' + err.message)
     }
@@ -183,6 +211,21 @@ function App() {
   const handleSelectFromMap = () => {
     setIsSelectingFromMap(!isSelectingFromMap)
     setError('')
+  }
+
+  const handleToggleMapSelectionMode = () => {
+    const newMode = !isMapSelectionMode
+    setIsMapSelectionMode(newMode)
+    setError('')
+    
+    const mapContainer = document.querySelector('.leaflet-container')
+    if (mapContainer) {
+      if (newMode) {
+        mapContainer.parentElement.classList.add('map-selection-mode')
+      } else {
+        mapContainer.parentElement.classList.remove('map-selection-mode')
+      }
+    }
   }
 
   const handleBatchImport = () => {
@@ -411,15 +454,35 @@ function App() {
         <div className="tab-navigation">
           <button 
             className={`tab-button ${activeTab === 'converter' ? 'active' : ''}`}
-            onClick={() => setActiveTab('converter')}
+            onClick={() => {
+              setActiveTab('converter')
+              setIsMapSelectionMode(false)
+              const mapContainer = document.querySelector('.leaflet-container')
+              if (mapContainer) {
+                mapContainer.parentElement.classList.remove('map-selection-mode')
+              }
+            }}
           >
             Search
           </button>
           <button 
             className={`tab-button ${activeTab === 'batch-import' ? 'active' : ''}`}
-            onClick={() => setActiveTab('batch-import')}
+            onClick={() => {
+              setActiveTab('batch-import')
+              setIsMapSelectionMode(false)
+              const mapContainer = document.querySelector('.leaflet-container')
+              if (mapContainer) {
+                mapContainer.parentElement.classList.remove('map-selection-mode')
+              }
+            }}
           >
             Batch Import
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'map-selection' ? 'active' : ''}`}
+            onClick={() => setActiveTab('map-selection')}
+          >
+            Map Selection
           </button>
         </div>
 
@@ -635,6 +698,48 @@ function App() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === 'map-selection' && (
+          <div className="sub-section">
+            <h3>Map Selection</h3>
+            <div className="sub-tab-navigation">
+              <button 
+                className={`sub-tab-button active`}
+              >
+                Basic Selection
+              </button>
+            </div>
+
+            <div className="input-section">
+              <div className="input-group">
+                <label htmlFor="map-selection-resolution">Resolution Level (0-15):</label>
+                <input
+                  id="map-selection-resolution"
+                  type="number"
+                  min="0"
+                  max="15"
+                  placeholder="e.g., 9"
+                  value={mapSelectionResolution}
+                  onChange={(e) => setMapSelectionResolution(e.target.value)}
+                />
+              </div>
+              <div className="button-group">
+                <button 
+                  onClick={handleToggleMapSelectionMode}
+                  className={`convert-btn ${isMapSelectionMode ? 'active' : ''}`}
+                  type="button"
+                >
+                  {isMapSelectionMode ? 'Stop Selection' : 'Start Selection'}
+                </button>
+              </div>
+              {isMapSelectionMode && (
+                <div className="info-message">
+                  Click on the map to add H3 cells. Current resolution: {mapSelectionResolution}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

@@ -565,3 +565,21 @@ textarea {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   transform: scale(1.05);
 }
+
+.map-selection-mode .leaflet-container {
+  cursor: crosshair !important;
+}
+
+.map-selection-mode .leaflet-container .leaflet-interactive {
+  cursor: crosshair !important;
+}
+
+.info-message {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #bee5eb;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
