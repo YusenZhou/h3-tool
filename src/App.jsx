@@ -63,7 +63,7 @@ function App() {
           return
         }
         
-        const coords = extractLatLngPairsFromString(coordinates)
+        const coords = coordinates.split(',').map(s => s.trim());
         if (coords.length !== 2) {
           setError('Please enter coordinates in format: latitude, longitude')
           return
@@ -427,7 +427,7 @@ function App() {
               {activeSubTab === 'coordinates' && (
                 <>
                   <div className="input-group">
-                      <label htmlFor="coordinates">Coordinates (Latitude, Longitude):</label>
+                      <label htmlFor="coordinates">Coordinate (Latitude, Longitude):</label>
                       <input
                         id="coordinates"
                         type="text"
