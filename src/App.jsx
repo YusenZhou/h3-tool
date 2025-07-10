@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { latLngToCell, cellToLatLng, cellToBoundary, isValidCell } from 'h3-js'
-import { MapContainer, TileLayer, ZoomControl, Polygon } from 'react-leaflet'
+import { MapContainer, TileLayer, ZoomControl, Polygon, useMapEvents } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import './leaflet-icons.js'
 import './App.css'
@@ -25,7 +25,19 @@ function App() {
     width: window.innerWidth,
     height: window.innerHeight
   })
+  const [isSelectingFromMap, setIsSelectingFromMap] = useState(false)
   const mapRef = useRef(null)
+
+  function MapClickHandler() {
+    useMapEvents({
+      click: (e) => {
+        if (isSelectingFromMap) {
+          setCoordinates(`${e.latlng.lat.toFixed(8)}, ${e.latlng.lng.toFixed(8)}`)
+        }
+      }
+    })
+    return null
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -165,6 +177,11 @@ function App() {
     }
     setH3Id('')
     setCenterCoords(null)
+    setError('')
+  }
+
+  const handleSelectFromMap = () => {
+    setIsSelectingFromMap(!isSelectingFromMap)
     setError('')
   }
 
@@ -369,6 +386,7 @@ function App() {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
+          <MapClickHandler />
           {h3Polygons.map((polygon, index) => (
             <Polygon
               key={`${polygon.id}-${index}`}
@@ -428,13 +446,22 @@ function App() {
                 <>
                   <div className="input-group">
                       <label htmlFor="coordinates">Coordinate (Latitude, Longitude):</label>
-                      <input
-                        id="coordinates"
-                        type="text"
-                        placeholder="e.g., 37.7749, -122.4194"
-                        value={coordinates}
-                        onChange={(e) => setCoordinates(e.target.value)}
-                      />
+                      <div className="coordinate-input-container">
+                        <input
+                          id="coordinates"
+                          type="text"
+                          placeholder="e.g., 37.7749, -122.4194"
+                          value={coordinates}
+                          onChange={(e) => setCoordinates(e.target.value)}
+                        />
+                        <button 
+                          onClick={handleSelectFromMap}
+                          className={`select-from-map-btn ${isSelectingFromMap ? 'active' : ''}`}
+                          type="button"
+                        >
+                          📍
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="input-group">
