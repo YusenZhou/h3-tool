@@ -20,7 +20,7 @@ function App() {
   const [importSuccess, setImportSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('converter')
   const [activeSubTab, setActiveSubTab] = useState('coordinates')
-  const [activeBatchSubTab, setActiveBatchSubTab] = useState('h3ids')
+  const [activeBatchSubTab, setActiveBatchSubTab] = useState('coords')
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight
@@ -413,7 +413,7 @@ function App() {
                 className={`sub-tab-button ${activeSubTab === 'coordinates' ? 'active' : ''}`}
                 onClick={() => setActiveSubTab('coordinates')}
               >
-                Coordinates
+                Coordinate
               </button>
               <button 
                 className={`sub-tab-button ${activeSubTab === 'h3id' ? 'active' : ''}`}
