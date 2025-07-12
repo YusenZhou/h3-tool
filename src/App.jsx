@@ -15,13 +15,13 @@ function App() {
   const [h3Polygons, setH3Polygons] = useState([])
   const [batchImportText, setBatchImportText] = useState('')
   const [batchImportCoordsText, setBatchImportCoordsText] = useState('')
-  const [batchImportResolution, setBatchImportResolution] = useState('7')
+  const [batchImportResolution, setBatchImportResolution] = useState('2')
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
   const [activeTab, setActiveTab] = useState('converter')
   const [activeSubTab, setActiveSubTab] = useState('coordinates')
   const [activeBatchSubTab, setActiveBatchSubTab] = useState('coords')
-  const [mapSelectionResolution, setMapSelectionResolution] = useState('7')
+  const [mapSelectionResolution, setMapSelectionResolution] = useState('2')
   const [isMapSelectionMode, setIsMapSelectionMode] = useState(false)
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
